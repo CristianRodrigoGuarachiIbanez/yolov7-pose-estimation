@@ -46,7 +46,8 @@ def plot_one_box_kpt(x, im, color=None, label=None, line_thickness=3, kpt_label=
     tl = line_thickness or round(0.002 * (im.shape[0] + im.shape[1]) / 2) + 1  # line/font thickness
     color = color or [random.randint(0, 255) for _ in range(3)]
     c1, c2 = (int(x[0]), int(x[1])), (int(x[2]), int(x[3]))
-    cv2.rectangle(im, c1, c2, (255,0,0), thickness=tl*1//3, lineType=cv2.LINE_AA)
+    cv2.rectangle(im, c1, c2, (255,0,0), thickness=tl*1//3, lineType=cv2.LINE_AA) 
+  
     if label:
         if len(label.split(' ')) > 1:
             label = label.split(' ')[-1]
@@ -495,7 +496,8 @@ def plot_skeleton_kpts(im, kpts, steps, orig_shape=None):
     pose_kpt_color = palette[[16, 16, 16, 16, 16, 0, 0, 0, 0, 0, 0, 9, 9, 9, 9, 9, 9]]
     radius = 5
     num_kpts = len(kpts) // steps
-
+    
+    
     for kid in range(num_kpts):
         r, g, b = pose_kpt_color[kid]
         x_coord, y_coord = kpts[steps * kid], kpts[steps * kid + 1]
@@ -505,7 +507,10 @@ def plot_skeleton_kpts(im, kpts, steps, orig_shape=None):
                 if conf < 0.5:
                     continue
             cv2.circle(im, (int(x_coord), int(y_coord)), radius, (int(r), int(g), int(b)), -1)
-
+            # print("x coord : ", x_coord, "y coord : ", y_coord, "num : ", num_kpts, "color : ", r,g,b)
+            # cv2.imshow("img", im)
+            # cv2.waitKey(60)
+            
     for sk_id, sk in enumerate(skeleton):
         r, g, b = pose_limb_color[sk_id]
         pos1 = (int(kpts[(sk[0]-1)*steps]), int(kpts[(sk[0]-1)*steps+1]))

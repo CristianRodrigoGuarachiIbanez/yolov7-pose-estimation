@@ -39,15 +39,19 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
     else:
         frame_width = int(cap.get(3))  #get video frame width
         frame_height = int(cap.get(4)) #get video frame height
-
+        # print("frame size ", frame_height, frame_width)
         
         vid_write_image = letterbox(cap.read()[1], (frame_width), stride=64, auto=True)[0] #init videowriter
         resize_height, resize_width = vid_write_image.shape[:2]
+        # print(f"resize h {resize_height} x resize w {resize_width}")
+
         out_video_name = f"{source.split('/')[-1].split('.')[0]}"
-        out = cv2.VideoWriter(f"{source}_keypoint.mp4",
+        out = cv2.VideoWriter(f"{out_video_name}_keypoint.mp4",
                             cv2.VideoWriter_fourcc(*'mp4v'), 30,
                             (resize_width, resize_height))
+        
 
+        
         while(cap.isOpened): #loop until cap opened or video not complete
         
             print("Frame {} Processing".format(frame_count+1))
@@ -65,9 +69,11 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                 image = image.to(device)  #convert image data to device
                 image = image.float() #convert image to float precision (cpu)
                 start_time = time.time() #start time for fps calculation
-            
+                
+                print(f"size frame {image.shape}")
                 with torch.no_grad():  #get predictions
                     output_data, _ = model(image)
+                    print("output data : ", output_data.shape)
 
                 output_data = non_max_suppression_kpt(output_data,   #Apply non max suppression
                                             0.25,   # Conf. Threshold.
@@ -75,7 +81,7 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                                             nc=model.yaml['nc'], # Number of classes.
                                             nkpt=model.yaml['nkpt'], # Number of keypoints.
                                             kpt_label=True)
-            
+
                 output = output_to_keypoint(output_data)
 
                 im0 = image[0].permute(1, 2, 0) * 255 # Change format [b, c, h, w] to [h, w, c] for displaying the image.
@@ -85,7 +91,6 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                 gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
 
                 for i, pose in enumerate(output_data):  # detections per image
-                
                     if len(output_data):  #check if no pose
                         for c in pose[:, 5].unique(): # Print results
                             n = (pose[:, 5] == c).sum()  # detections per class
@@ -95,6 +100,7 @@ def run(poseweights="yolov7-w6-pose.pt",source="football1.mp4",device='cpu',view
                             c = int(cls)  # integer class
                             kpts = pose[det_index, 6:]
                             label = None if opt.hide_labels else (names[c] if opt.hide_conf else f'{names[c]} {conf:.2f}')
+
                             plot_one_box_kpt(xyxy, im0, label=label, color=colors(c, True), 
                                         line_thickness=opt.line_thickness,kpt_label=True, kpts=kpts, steps=3, 
                                         orig_shape=im0.shape[:2])
